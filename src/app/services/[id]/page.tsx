@@ -1,113 +1,97 @@
-"use client";
+import { Metadata } from "next";
+import ServiceDetailsPage from "./ServiceDetailsPage";
 
-import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import ServiceHeader from "@/components/ServiceHeader";
-import { Award, Shield, Users } from "lucide-react";
-import SlotSelection from "@/components/SlotSelection";
+const BACKEND_URL = "https://api.thegroome.com";
+const WEBSITE_URL = "https://thegroome.com";
 
-const ServiceDetailsPage = () => {
-  const params = useParams();
-  const { id } = params;
+async function getService(id: string) {
+  try {
+    const res = await fetch(`${BACKEND_URL}/users/services/${id}`, {
+      next: { revalidate: 300 },
+    });
 
-  const [loading, setLoading] = useState(true);
-  const [serviceData, setServiceData] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
+    
+    if (!res.ok) return null;
+    return res.json();
+  } catch (error) {
+    console.error("Failed to fetch metadata for service:", error);
+    return null;
+  }
+}
 
-  useEffect(() => {
-    if (!id) return;
+// 1. Ensure the type definition perfectly matches Next.js specifications
+interface PageProps {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
 
-    const fetchService = async () => {
-      try {
-        setLoading(true);
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  // Await the parameters safely
+  const { id } = await params;
+  const service = await getService(id);
 
-        const res = await fetch(`https://thegroome.com/backend/users/services/${id}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status} - ${res.statusText}`);
-
-        const data = await res.json();
-        setServiceData(data);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
+  if (!service) {
+    return {
+      title: "Service",
+      description: "Service experience details.",
     };
-
-    fetchService();
-  }, [id]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full"></div>
-      </div>
-    );
   }
 
-  if (error || !serviceData) {
-    return (
-      <div className="flex items-center justify-center h-screen text-red-600 text-lg">
-        Failed to load service. {error}
-      </div>
-    );
-  }
+  // 2. Normalize image field mapping to look for both architectures 
+  // (matching your client component layout)
+  const rawImages = service.images || service.service_images || [];
+  const primaryImage = rawImages[0];
 
-  return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="w-full px-4 md:px-10 lg:px-16 xl:px-24">
+  const imageUrl = primaryImage?.image_url
+    ? primaryImage.image_url.startsWith("http")
+      ? primaryImage.image_url
+      : `${BACKEND_URL}${primaryImage.image_url}`
+    : `${WEBSITE_URL}/placeholder.png`;
 
-        {/* --------------------------- */}
-        {/* TWO COLUMN LAYOUT ON DESKTOP */}
-        {/* --------------------------- */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+  const shareUrl = `${WEBSITE_URL}/services/${id}`;
+  const finalPrice =
+    service.discount_price != null
+      ? Number(service.price) - Number(service.discount_price)
+      : Number(service.price);
 
-          {/* LEFT SIDE → Service Header */}
-          <div className="lg:col-span-2">
-            <ServiceHeader service={serviceData} />
-          </div>
+  const cleanDescription = service.description || `Book ${service.name} starting from ₹${finalPrice}.`;
 
-          {/* RIGHT SIDE → Slot Selection */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-20">
-              <SlotSelection
-                serviceId={serviceData?.id??"xyz"}
-                vendorId={serviceData?.vendor?.id}
-                duration={serviceData?.duration_minutes}
-                onSelectSlot={(slot) => console.log("Selected Slot:", slot)}
-              />
-            </div>
-          </div>
+  return {
+    metadataBase: new URL(WEBSITE_URL),
+    title: service.name,
+    description: cleanDescription,
+    openGraph: {
+      title: service.name,
+      description: cleanDescription,
+      url: shareUrl,
+      siteName: "TheGroome",
+      type: "website",
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: service.name,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: service.name,
+      description: cleanDescription,
+      images: [imageUrl],
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
+}
 
-        </div>
-
-        {/* Why Choose Us (Full Width Below) */}
-        <div className="mt-12 bg-white rounded-2xl shadow-md p-6 md:p-8">
-          <h3 className="font-semibold text-lg text-gray-900 mb-6">
-            Why Choose Us?
-          </h3>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <div className="flex items-center space-x-3">
-              <Shield size={22} className="text-green-500" />
-              <span className="text-sm text-gray-700">100% Safe & Hygienic</span>
-            </div>
-
-            <div className="flex items-center space-x-3">
-              <Award size={22} className="text-blue-500" />
-              <span className="text-sm text-gray-700">Certified Professionals</span>
-            </div>
-
-            <div className="flex items-center space-x-3">
-              <Users size={22} className="text-purple-500" />
-              <span className="text-sm text-gray-700">Expert Team</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="h-12" />
-      </div>
-    </div>
-  );
-};
-
-export default ServiceDetailsPage;
+// 3. Bind the async params context directly to the Page execution thread
+export default async function Page({ params }: PageProps) {
+  // We await this to make sure Next.js completes the server cycle perfectly
+  await params; 
+  
+  return <ServiceDetailsPage />;
+}

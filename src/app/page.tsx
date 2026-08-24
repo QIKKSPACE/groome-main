@@ -10,6 +10,7 @@ import AskLocation from "@/components/AskLocation"; // 👈 import this
 import LocationStatus from "@/components/LocationStatus";
 import PremiumCarouselOptimized from "@/components/PremiumCarousel";
 import { useCaptureReferral } from "@/hooks/useCaptureReferral";
+import BannerSlider3 from "@/components/sections/banner-slider-3";
 
 export default function HomePage() {
   // useCaptureReferral();
@@ -23,6 +24,8 @@ export default function HomePage() {
       <BannerSlider />
       <CategoryCircles />
       <BannerSlider2 />
+      <BannerSlider3 />
+
       <PremiumCarouselOptimized />
 
      <LocationStatus />

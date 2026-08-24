@@ -80,7 +80,7 @@ const BookingPage: React.FC = () => {
     setSuccess(false);
 
     try {
-      const res = await fetch("https://thegroome.com/backend/users/bookings", {
+      const res = await fetch("https://api.thegroome.com/users/bookings", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

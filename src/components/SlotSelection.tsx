@@ -44,7 +44,7 @@ const SlotSelection: React.FC<Props> = ({ serviceId, vendorId, duration, onSelec
     setSelectedSlot(null);
 
     try {
-      const url = `https://thegroome.com/backend/users/calculateSlot/${serviceId}?date=${date}&vendorId=${vendorId}&duration=${duration}`;
+      const url = `https://api.thegroome.com/users/calculateSlot/${serviceId}?date=${date}&vendorId=${vendorId}&duration=${duration}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to load slots");
 
@@ -121,7 +121,7 @@ const SlotSelection: React.FC<Props> = ({ serviceId, vendorId, duration, onSelec
 
       {slotData && slotData.closed && (
         <div className="p-4 bg-yellow-100 text-yellow-700 rounded-lg text-sm">
-          This service is closed on {formatDate(slotData.date)}
+             <>Vendor is closed on {formatDate(selectedDate)} (Weekly Off)</>
         </div>
       )}
 
@@ -140,24 +140,25 @@ const SlotSelection: React.FC<Props> = ({ serviceId, vendorId, duration, onSelec
                   selectedSlot?.time === slot.time && selectedSlot.date === slotData.date;
 
                 return (
-                  <button
-                    key={index}
-                    disabled={!slot.available}
-                    onClick={() => {
-                      setSelectedSlot(slotObj);
-                      onSelectSlot?.(slotObj);
-                    }}
-                    className={`p-3 rounded-lg text-sm font-semibold border transition-all
-                      ${
-                        slot.available
-                          ? isSelected
-                            ? "bg-blue-600 text-white border-blue-700"
-                            : "bg-green-100 text-green-800 border-green-300 hover:bg-green-200"
-                          : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                      }`}
-                  >
-                    {slot.time}
-                  </button>
+                <button
+  key={index}
+  disabled={!slot.available}
+  onClick={() => {
+    setSelectedSlot(slotObj);
+    onSelectSlot?.(slotObj);
+  }}
+  className={`p-3 rounded-lg text-sm font-semibold border transition-all
+    ${
+      slot.available
+        ? isSelected
+          ? "bg-blue-600 text-white border-blue-700"
+          : "bg-green-100 text-green-800 border-green-300 hover:bg-green-200"
+        : "bg-red-100 text-red-700 border-red-300 cursor-not-allowed"
+    }`}
+>
+  {slot.time}
+  
+</button>
                 );
               })}
             </div>

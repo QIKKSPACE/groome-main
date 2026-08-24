@@ -37,6 +37,7 @@ export default function BusinessForm() {
     state: "",
     fullAddress: "",
     services: [], // ✅ Initialize empty array,
+    categories: [], // ✅ Added categories field
     place_id:""
   });
 const { showToast } = useToast();
@@ -56,7 +57,11 @@ const { showToast } = useToast();
   // ✅ Access services data from Webflow context
   const { data, loading: servicesLoading, error: servicesError } = useContext(WebflowContext);
   const services = data?.services || [];
+const categories = data?.categories || [];
 
+const parentCategories = categories.filter(
+  (category: any) => category.parent_id === null
+);
   useEffect(() => {
     setRedirectPath(null);
   }, []);
@@ -75,7 +80,7 @@ const { showToast } = useToast();
     setLoading(true);
     setZipError("");
     try {
-      const res = await fetch(`https://thegroome.com/backend/superadmin/zip-lookup?zip=${zip}`, {
+      const res = await fetch(`https://api.thegroome.com/superadmin/zip-lookup?zip=${zip}`, {
         signal: AbortSignal.timeout(8000),
       });
       const data = await res.json();
@@ -110,7 +115,7 @@ const { showToast } = useToast();
     setGoogleLoading(true);
     setGoogleError("");
     try {
-      const res = await fetch(`https://thegroome.com/backend/places/autocomplete?query=${encodeURIComponent(query)}`);
+      const res = await fetch(`https://api.thegroome.com/places/autocomplete?query=${encodeURIComponent(query)}`);
       if (!res.ok) throw new Error("Failed to fetch autocomplete");
       const data = await res.json();
       setAutocompleteResults(data);
@@ -130,7 +135,7 @@ const fetchPlaceDetails = async (place: PlaceSuggestion) => {
   setGoogleSearch(place.description);
 
   try {
-    const res = await fetch(`https://thegroome.com/backend/places/details?place_id=${place.place_id}`);
+    const res = await fetch(`https://api.thegroome.com/places/details?place_id=${place.place_id}`);
     if (!res.ok) throw new Error("Failed to fetch place details");
     const data = await res.json();
 
@@ -151,37 +156,58 @@ const fetchPlaceDetails = async (place: PlaceSuggestion) => {
 };
 
 // ✅ Fix: stringify service_ids in FormData
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      const selectedServiceIds = services
-        .filter((s: any) => form.services.includes(s.name))
-        .map((s: any) => s.id);
+  try {
+    const selectedServiceIds = services
+      .filter((s: any) => form.services.includes(s.name))
+      .map((s: any) => s.id);
 
-      const formData = new FormData();
-      formData.append("business_name", form.businessName);
-      formData.append("address", form.fullAddress);
-      formData.append("zip_code", form.pincode);
-      formData.append("city", form.city);
-      formData.append("state", form.state);
-      formData.append("userId", "YOUR_USER_ID_HERE");
-      formData.append("service_ids", JSON.stringify(selectedServiceIds));
+    const formData = new FormData();
 
-      const res = await apiClient.post("/verification/vendors/", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-showToast("🎉 Business registered successfully!","success");
+    formData.append("business_name", form.businessName);
+    formData.append("address", form.fullAddress);
+    formData.append("zip_code", form.pincode);
+    formData.append("city", form.city);
+    formData.append("state", form.state);
+    formData.append("userId", "YOUR_USER_ID_HERE");
 
-      console.log("✅ Response:", res.data);
-    } catch (err: any) {
-      console.error("❌ Error submitting form:", err);
-    showToast(`${err?.response?.data?.message || "Something went wrong."}`,"error");
-    } finally {
-      setLoading(false);
+    formData.append("service_ids", JSON.stringify(selectedServiceIds));
+    formData.append("category_ids", JSON.stringify(form.categories));
+
+    // ✅ ADD THESE (IMPORTANT)
+    if (form.gstNumber) {
+      formData.append("gst_number", form.gstNumber);
     }
-  };
+
+    if (form.gstFile) {
+      formData.append("gst_doc", form.gstFile);
+    }
+
+    if (form.shopActNumber) {
+      formData.append("shop_act_number", form.shopActNumber);
+    }
+
+    if (form.shopActFile) {
+      formData.append("company_doc", form.shopActFile);
+    }
+
+    const res = await apiClient.post("/verification/vendors/", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    showToast("🎉 Business registered successfully!", "success");
+    console.log("✅ Response:", res.data);
+
+  } catch (err: any) {
+    console.error("❌ Error submitting form:", err);
+    showToast(err?.response?.data?.message || "Something went wrong.", "error");
+  } finally {
+    setLoading(false);
+  }
+};
 
 
   const handleServiceSelect = (serviceName: string) => {
@@ -192,6 +218,17 @@ showToast("🎉 Business registered successfully!","success");
         services: alreadySelected
           ? prev.services.filter((s) => s !== serviceName)
           : [...prev.services, serviceName],
+      };
+    });
+  };
+  const handleCategorySelect = (categoryId: number) => {
+    setForm((prev) => {
+      const alreadySelected = prev.categories.includes(categoryId);
+      return {
+        ...prev,
+        categories: alreadySelected
+          ? prev.categories.filter((id) => id !== categoryId)
+          : [...prev.categories, categoryId ],
       };
     });
   };
@@ -379,6 +416,32 @@ showToast("🎉 Business registered successfully!","success");
             <p className="text-gray-500 text-sm">No services available.</p>
           )}
         </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Select Products Category
+          </label>
+          {servicesLoading ? (
+            <p className="text-gray-500 text-sm">Loading services...</p>
+          ) : servicesError ? (
+            <p className="text-red-500 text-sm">Failed to load services.</p>
+          ) : services.length > 0 ? (
+            <div className="grid grid-cols-2 gap-2 border p-3 rounded-lg max-h-40 overflow-y-auto">
+             {parentCategories.map((category: any) => (
+  <label key={category.id} className="flex items-center gap-2 text-sm">
+    <input
+      type="checkbox"
+      checked={form.categories?.includes(category.id)}
+      onChange={() => handleCategorySelect(category.id)}
+    />
+    {category.name}
+  </label>
+))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-sm">No services available.</p>
+          )}
+        </div>
+        
         {/* GST & Shop Act */}
         <div>
           <label className="block text-sm font-medium text-gray-700">GST Number (optional)</label>

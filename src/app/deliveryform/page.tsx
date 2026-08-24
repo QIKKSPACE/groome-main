@@ -53,7 +53,7 @@ const { login, redirectPath, setRedirectPath, error: authError } = useAuth();
     setIsZipValid(false);
 
     try {
-      const res = await fetch(`https://thegroome.com/backend/superadmin/zip-lookup?zip=${zip}`, {
+      const res = await fetch(`https://api.thegroome.com/superadmin/zip-lookup?zip=${zip}`, {
         signal: AbortSignal.timeout(8000),
       });
       const data = await res.json();

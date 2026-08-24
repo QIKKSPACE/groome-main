@@ -55,7 +55,7 @@ export const ServicesProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
 
     try {
-      const res = await axios.get("https://thegroome.com/backend/users/allService");
+      const res = await axios.get("https://api.thegroome.com/users/allService");
       setServices(res.data);
     } catch (err: any) {
       console.error("Error fetching services:", err);

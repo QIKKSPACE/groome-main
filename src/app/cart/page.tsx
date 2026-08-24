@@ -5,11 +5,23 @@ import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, Trash2, ArrowLeft, User, Phone, MapPin, Mail } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { useServiceCart } from "@/contexts/ServiceCartContext";
 import Header from "@/components/sections/header";
 import Footer from "@/components/sections/footer";
+import { useRouter } from "next/navigation";
 
 export default function CartPage() {
   const { items, updateQuantity, removeFromCart, getTotalPrice } = useCart();
+  const { 
+    items: serviceItems, 
+    removeService, 
+    clearVendorServices, 
+    getGroupedByVendor 
+  } = useServiceCart();
+  const router = useRouter();
+
+  const [activeCartTab, setActiveCartTab] = useState<'product' | 'service'>('product');
+
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
     mobile: '',
@@ -39,40 +51,67 @@ export default function CartPage() {
     alert('Order placed successfully!');
   };
 
+  const groupedServiceItems = getGroupedByVendor();
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
       {/* Header */}
     
       {/* Cart Title */}
-      <div className="bg-white shadow-sm">
+      <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <Link href="/" className="flex items-center text-blue-600 hover:text-blue-700 font-medium">
               <ArrowLeft size={18} className="mr-1" />
               Continue Shopping
             </Link>
+
+            {/* Cart Tabs */}
+            <div className="flex bg-gray-100 p-1 rounded-lg">
+              <button
+                onClick={() => setActiveCartTab('product')}
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                  activeCartTab === 'product'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Product Cart ({items.length})
+              </button>
+              <button
+                onClick={() => setActiveCartTab('service')}
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                  activeCartTab === 'service'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Service Cart ({serviceItems.length})
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {items.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
-              <svg className="mx-auto h-24 w-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
-              </svg>
+        {activeCartTab === 'product' ? (
+          items.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-gray-400 mb-4">
+                <svg className="mx-auto h-24 w-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Your product cart is empty</h2>
+              <p className="text-gray-600 mb-6">Looks like you haven't added any products to your cart yet.</p>
+              <Link 
+                href="/mall"
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+              >
+                Shop Products
+              </Link>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h2>
-            <p className="text-gray-600 mb-6">Looks like you haven't added any items to your cart yet.</p>
-            <Link 
-              href="/"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-            >
-              Start Shopping
-            </Link>
-          </div>
-        ) : (
+          ) : (
           <div className="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start">
             {/* Cart Items */}
             <div className="lg:col-span-8">
@@ -266,6 +305,91 @@ export default function CartPage() {
               )}
             </div>
           </div>
+        )) : (
+          /* Service Cart Tab Content */
+          serviceItems.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-gray-400 mb-4">
+                <svg className="mx-auto h-24 w-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Your service cart is empty</h2>
+              <p className="text-gray-600 mb-6">Looks like you haven't added any services to book yet.</p>
+              <Link 
+                href="/services"
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+              >
+                Browse Services
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-6 lg:max-w-4xl lg:mx-auto">
+              {groupedServiceItems.map((group) => (
+                <div key={group.vendor_id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                  {/* Vendor Header */}
+                  <div className="bg-gray-50 flex items-center justify-between p-4 border-b border-gray-200">
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-12 h-12 rounded-full overflow-hidden border bg-white">
+                        <Image 
+                          src={group.vendor_image} 
+                          alt={group.vendor_name} 
+                          fill 
+                          className="object-cover"
+                        />
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-900">{group.vendor_name}</h3>
+                    </div>
+                    <button 
+                      onClick={() => clearVendorServices(group.vendor_id)}
+                      className="text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span className="hidden sm:inline">Clear Vendor</span>
+                    </button>
+                  </div>
+
+                  {/* Services List */}
+                  <div className="p-4 space-y-4">
+                    {group.services.map((service) => (
+                      <div key={service.id} className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-lg border border-gray-100 shadow-sm relative">
+                        <div className="relative w-full sm:w-24 h-40 sm:h-24 rounded-md overflow-hidden flex-shrink-0 bg-gray-100">
+                          <Image src={service.image} alt={service.name} fill className="object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                          <h4 className="text-base sm:text-lg font-medium text-gray-900 mb-1">{service.name}</h4>
+                          <p className="text-lg font-bold text-blue-600">₹{service.price}</p>
+                        </div>
+                        <button 
+                          onClick={() => removeService(service.id)}
+                          className="absolute sm:relative top-2 right-2 sm:top-auto sm:right-auto text-gray-400 hover:text-red-500 p-2 sm:self-center bg-white/80 rounded-full"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Vendor Footer (Booking) */}
+                  <div className="p-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4 bg-gray-50">
+                    <div>
+                      <p className="text-sm text-gray-500 font-medium">Total for this vendor</p>
+                      <p className="text-2xl font-bold text-gray-900">₹{group.totalPrice}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const serviceIds = JSON.stringify(group.services.map(s => s.id));
+                        router.push(`/select-slot?vendorId=${group.vendor_id}&serviceIds=${serviceIds}`);
+                      }}
+                      className="w-full sm:w-auto px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-md"
+                    >
+                      Book Now
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
         )}
       </div>
 

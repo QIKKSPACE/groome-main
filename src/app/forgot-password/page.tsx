@@ -26,7 +26,7 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     try {
       // 1️⃣ Check if user exists
-      const res = await fetch("https://thegroome.com/backend/auth/check-user", {
+      const res = await fetch("https://api.thegroome.com/auth/check-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone }),

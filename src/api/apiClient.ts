@@ -3,7 +3,7 @@ import axios from "axios";
 import { getTokens, storeAccessToken, clearTokens } from "./authService";
 
 export const apiClient = axios.create({
-  baseURL: "https://thegroome.com/backend/",
+  baseURL: "https://api.thegroome.com/",
 });
 
 // ✅ Attach token only if explicitly allowed
@@ -42,7 +42,7 @@ apiClient.interceptors.response.use(
         const { refreshToken } = getTokens();
         if (!refreshToken) throw new Error("No refresh token");
 
-        const res = await axios.post("https://thegroome.com/backend/auth/refresh", {
+        const res = await axios.post("https://api.thegroome.com/auth/refresh", {
           refreshToken,
         });
 

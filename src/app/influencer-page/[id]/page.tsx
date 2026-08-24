@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play } from "lucide-react";
+import { Instagram, Play } from "lucide-react";
 
 export default function InfluencerPage() {
   const { id } = useParams();
@@ -17,7 +17,7 @@ export default function InfluencerPage() {
   useEffect(() => {
     if (!id) return;
 
-    fetch(`https://thegroome.com/backend/influencer/${id}`)
+    fetch(`https://api.thegroome.com/influencer/${id}`)
       .then((res) => res.json())
       .then((data) => {
         setInfluencer(data);
@@ -46,7 +46,7 @@ export default function InfluencerPage() {
           >
             <video
               key={activeVideo.id}
-              src={`https://thegroome.com/backend${activeVideo.video_url}`}
+              src={`https://api.thegroome.com${activeVideo.video_url}`}
               autoPlay
               muted
               loop
@@ -61,7 +61,7 @@ export default function InfluencerPage() {
                 {influencer.name}
               </h1>
               <p className="text-[11px] uppercase tracking-widest text-white/60 mt-1">
-                Available for booking
+                Available for Brand Promotions
               </p>
             </div>
           </div>
@@ -88,7 +88,7 @@ export default function InfluencerPage() {
               `}
             >
               <video
-                src={`https://thegroome.com/backend${video.video_url}`}
+                src={`https://api.thegroome.com${video.video_url}`}
                 muted
                 className="absolute inset-0 w-full h-full object-cover"
               />
@@ -110,7 +110,22 @@ export default function InfluencerPage() {
             <h2 className="text-2xl font-semibold tracking-tight">
               {influencer.name}
             </h2>
-
+             <div className="flex items-center justify-center gap-3">
+                <h2 className="text-3xl font-light tracking-tight text-white">
+                  {influencer.name}
+                </h2>
+               
+                  <a
+                    href={influencer.instagram_profile}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-neutral-400 hover:text-white transition-colors"
+                    title="View Instagram Profile"
+                  >
+                    <Instagram size={18} className="mt-1" />
+                  </a>
+            
+              </div>
             {/* About with Read More */}
             <div className="text-muted-foreground text-sm leading-relaxed">
               <p className={expanded ? "" : "line-clamp-3"}>
@@ -132,7 +147,7 @@ export default function InfluencerPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                Booking starts at
+                Brand Promotion starts at
               </p>
               <p className="text-3xl font-semibold">
                 ₹{influencer.booking_price}

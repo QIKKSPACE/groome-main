@@ -67,6 +67,7 @@ const SignupPage = () => {
   };
 
 const handleSignupSubmit = async (e: React.FormEvent) => {
+  if(isLoading) return; // Prevent multiple submissions
   e.preventDefault();
   if (!validateSignupForm()) return;
 
@@ -75,7 +76,7 @@ const handleSignupSubmit = async (e: React.FormEvent) => {
 
   try {
     // STEP 1 → Backend pre-check
-    const res = await fetch("https://thegroome.com/backend/auth/pre-signup", {
+    const res = await fetch("https://api.thegroome.com/auth/pre-signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -98,6 +99,8 @@ const handleSignupSubmit = async (e: React.FormEvent) => {
 console.log("Sending OTP to:", `+91${signupData.phone}`);
 console.log("Recaptcha verifier:", window.recaptchaVerifier);
     // STEP 3 → Firebase OTP
+
+   // await window.recaptchaVerifier.render();
     const confirmation = await signInWithPhoneNumber(
       auth,
       `+91${signupData.phone}`,

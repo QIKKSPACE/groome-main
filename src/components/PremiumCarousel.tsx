@@ -94,7 +94,7 @@ const PremiumCarousel = () => {
   return (
     <div className="premium-carousel-container">
       <div className="heading">
-        <h1>Book Influencer</h1>
+        <h3>Book Media Celebrity For Brand Promotions</h3>
       </div>
 
       <div className="scene">
@@ -115,7 +115,7 @@ const PremiumCarousel = () => {
               i === (index + 1) % creators.length) && (
               <video
                 ref={(el) => (videoRefs.current[i] = el)}
-                src={`https://thegroome.com/backend${creator.video_url}`}
+                src={`https://api.thegroome.com${creator.video_url}`}
                 muted
                 autoPlay={i === index} // only autoPlay active
                 loop

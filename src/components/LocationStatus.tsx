@@ -7,28 +7,60 @@ import AskLocation from "./AskLocation";
 
 type ModalState = "hidden" | "gps" | "pincode";
 
+interface PincodeResponse {
+  success?: boolean;
+  pincode?: string;
+  city?: string;
+  state?: string;
+  message?: string;
+}
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.thegroome.com";
+const LOCATION_API = `${API_BASE}/superadmin/pincode`;
+
 const LocationRequest: React.FC = () => {
   const { location, updateLocation } = useLocation();
+
   const [modalState, setModalState] = useState<ModalState>("hidden");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState(false);
 
-  const locationMissing = !location?.lat || !location?.lng;
+  // Check if coordinates exist (0 is valid for lat/lng)
+  const locationMissing = location?.lat == null || location?.lng == null;
 
   useEffect(() => {
-    if (location?.lat && location?.lng) {
+    if (!locationMissing) {
       setModalState("hidden");
-    } else if (!dismissed) {
+      return;
+    }
+
+    if (!dismissed) {
       setModalState("gps");
     } else {
       setModalState("hidden");
     }
-  }, [location, dismissed]);
+  }, [locationMissing, dismissed]);
+
+  const getAddressFromCoordinates = async (
+    lat: number,
+    lng: number
+  ): Promise<PincodeResponse> => {
+    const url = `${LOCATION_API}?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`;
+
+    const response = await fetch(url);
+    const data: PincodeResponse = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Unable to get location details.");
+    }
+
+    return data;
+  };
 
   const handleGPSRequest = () => {
     if (!navigator.geolocation) {
-      setError("Geolocation not supported. Please enter your pincode.");
+      setError("Geolocation is not supported by your browser. Please enter your pincode.");
       setModalState("pincode");
       return;
     }
@@ -37,59 +69,98 @@ const LocationRequest: React.FC = () => {
     setError(null);
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        updateLocation({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          type: "gps",
-        });
-        setLoading(false);
-        setModalState("hidden");
-        setDismissed(false);
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        try {
+          // Fetch pincode, city, and state from reverse geocoding endpoint
+          const locationData = await getAddressFromCoordinates(lat, lng);
+
+          updateLocation({
+            lat,
+            lng,
+            pincode: locationData.pincode || "",
+            city: locationData?.address.city || "",
+            state: locationData?.address.state || "",
+            type: "gps",
+          });
+
+          setModalState("hidden");
+          setDismissed(false);
+        } catch (apiError) {
+          console.error("Failed to fetch location metadata:", apiError);
+
+          // Fallback: Store raw coordinates even if reverse-geocoding failed
+          updateLocation({
+            lat,
+            lng,
+            pincode: "",
+            city: "",
+            state: "",
+            type: "gps",
+          });
+
+          setModalState("hidden");
+          setDismissed(false);
+        } finally {
+          setLoading(false);
+        }
       },
-      (err) => {
+      (geoError) => {
         setLoading(false);
-        setError(
-          err.code === 1
-            ? "Permission denied. Please enter your pincode."
-            : "Unable to get location. Please enter your pincode."
-        );
+
+        switch (geoError.code) {
+          case 1:
+            setError("Location permission was denied. Please enter your pincode.");
+            break;
+          case 2:
+            setError("Your location could not be determined. Please enter your pincode.");
+            break;
+          case 3:
+            setError("Location request timed out. Please enter your pincode.");
+            break;
+          default:
+            setError("Unable to retrieve your location. Please enter your pincode.");
+            break;
+        }
+
         setModalState("pincode");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 300000,
       }
     );
   };
 
   return (
     <>
-      {/* --- Always-visible block element --- */}
-      <div className="flex flex-col items-center justify-center h-[70vh] text-center px-4 bg-gray-50">
-        <div className="bg-white shadow-lg rounded-3xl p-8 flex flex-col items-center max-w-md w-full animate-fadeIn">
-          {/* Icon */}
+      {/* Main empty/location state message */}
+      <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 bg-gray-50">
+        <div className="bg-white shadow-lg rounded-3xl p-8 flex flex-col items-center max-w-md w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
           {locationMissing ? (
             <MapPin className="text-blue-500 w-14 h-14 mb-4 animate-bounce" />
           ) : (
-            <PackageCheck className="text-green-500 w-14 h-14 mb-4 animate-pulse" />
+            <PackageCheck className="text-emerald-500 w-14 h-14 mb-4 animate-pulse" />
           )}
 
-          {/* Heading */}
           <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-2">
-            {locationMissing
-              ? "Location Required"
-              : "No Products or Vendors Found Near You"}
+            {locationMissing ? "Location Required" : "No Products or Vendors Found Near You"}
           </h2>
 
-          {/* Subtext */}
           <p className="text-gray-500 text-sm md:text-base mb-6">
             {locationMissing
-              ? "To show services near you, enter your pincode."
+              ? "Enable your location or enter your pincode to see services near you."
               : "We'll notify you when services are available in your area. Please check back later."}
           </p>
 
-          {/* Button to open pincode modal */}
           {locationMissing && (
             <button
+              type="button"
               onClick={() => setModalState("pincode")}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-6 py-3 rounded-xl shadow-md transition-all duration-300"
+              className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-medium px-6 py-3 rounded-xl shadow-md transition-all duration-200"
             >
               Enter Pincode
             </button>
@@ -97,51 +168,58 @@ const LocationRequest: React.FC = () => {
         </div>
       </div>
 
-      {/* --- GPS Modal --- */}
+      {/* GPS Location Prompt Modal */}
       {modalState === "gps" && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 shadow-lg max-w-sm w-[90%] text-center animate-fadeIn relative">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl p-6 shadow-xl max-w-sm w-full text-center animate-in fade-in zoom-in-95 duration-200">
             <MapPin className="text-blue-500 w-14 h-14 mb-4 mx-auto animate-bounce" />
+
             <h2 className="text-lg font-semibold text-gray-800 mb-2">
               Enable Location or Enter Pincode
             </h2>
+
             <p className="text-gray-500 text-sm mb-6">
-              We use your location to show nearby services.
+              We use your location to show nearby services and available vendors.
             </p>
 
             <button
+              type="button"
               onClick={handleGPSRequest}
               disabled={loading}
-              className={`bg-blue-500 hover:bg-blue-600 text-white font-medium px-6 py-3 rounded-xl shadow-md w-full transition-all duration-300 ${
-                loading ? "opacity-70 cursor-not-allowed" : ""
+              className={`bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-xl shadow-md w-full transition-all duration-200 ${
+                loading ? "opacity-70 cursor-not-allowed" : "active:scale-98"
               }`}
             >
-              {loading ? "Fetching..." : "Enable Location"}
+              {loading ? "Getting Location..." : "Enable Location"}
             </button>
 
             <button
+              type="button"
               onClick={() => setModalState("pincode")}
-              className="mt-3 text-gray-500 underline text-sm"
+              disabled={loading}
+              className="mt-3 text-gray-600 hover:text-slate-900 underline text-sm transition disabled:opacity-50"
             >
               Enter Pincode Manually
-            </button><br></br>
+            </button>
 
             <button
+              type="button"
               onClick={() => {
                 setDismissed(true);
                 setModalState("hidden");
               }}
-              className="mt-2 text-gray-400 text-xs underline"
+              disabled={loading}
+              className="block mx-auto mt-3 text-gray-400 hover:text-gray-600 text-xs underline disabled:opacity-50 transition"
             >
               Maybe later
             </button>
 
-            {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+            {error && <p className="mt-4 text-xs font-medium text-rose-600">{error}</p>}
           </div>
         </div>
       )}
 
-      {/* --- Pincode Modal --- */}
+      {/* Manual Pincode Input Modal */}
       {modalState === "pincode" && (
         <AskLocation
           onClose={() => {
@@ -151,49 +229,6 @@ const LocationRequest: React.FC = () => {
           }}
         />
       )}
-
-      {/* Animations */}
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.4s ease-out;
-        }
-
-        @keyframes bounce {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-8px);
-          }
-        }
-        .animate-bounce {
-          animation: bounce 1s infinite;
-        }
-
-        @keyframes pulse {
-          0%,
-          100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.6;
-          }
-        }
-        .animate-pulse {
-          animation: pulse 1.5s infinite;
-        }
-      `}</style>
     </>
   );
 };

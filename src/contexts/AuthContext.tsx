@@ -111,7 +111,7 @@ const verifyOtp = async (userData: any, firebaseToken: string) => {
       payload.parent_affiliate = referralId; // add parent_affiliate only if referral exists
     }
 
-    const res = await axios.post("https://thegroome.com/backend/auth/signup", payload);
+    const res = await axios.post("https://api.thegroome.com/auth/signup", payload);
 
     const { user: newUser, accessToken, refreshToken } = res.data;
 
@@ -184,7 +184,7 @@ const acceptAffiliate = async (): Promise<string | null> => {
   if (!user) throw new Error("User not logged in");
 
   try {
-    const res = await axios.post("https://thegroome.com/backend/users/accept_affiliate", {
+    const res = await axios.post("https://api.thegroome.com/users/accept_affiliate", {
       userId: user.id,
     });
 

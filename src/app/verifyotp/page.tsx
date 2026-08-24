@@ -19,7 +19,8 @@ const OtpVerificationPage = () => {
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { verifyOtp, error: authError, loading } = useAuth(); // ✅ from context
+  
+  const { verifyOtp, error: authError, loading,redirectPath } = useAuth(); // ✅ from context
 const verificationId = searchParams.get("vid");
   const userData = {
     phone: searchParams.get("phone") || "",
@@ -112,7 +113,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     await verifyOtp(userData, firebaseToken);
 
     // ✅ 5️⃣ Redirect ONLY after success
-    //router.push(redirectPath || "/profile");
+    router.push(redirectPath || "/profile");
 
   } catch (err: any) {
     console.error("OTP / Signup failed:", err);

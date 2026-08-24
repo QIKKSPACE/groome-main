@@ -24,7 +24,7 @@ interface ServiceHeaderProps {
 }
 
 const ServiceHeader: React.FC<ServiceHeaderProps> = ({ service }) => {
-  const baseURL = "https://thegroome.com/backend"; 
+  const baseURL = "https://api.thegroome.com"; 
 
   const [index, setIndex] = useState(0);
   const total = service.images?.length || 0;
@@ -72,10 +72,10 @@ const ServiceHeader: React.FC<ServiceHeaderProps> = ({ service }) => {
             >
               {service.images.map((img, idx) => (
                 <div key={idx} className="relative h-64 md:h-80 min-w-full">
-                  <Image
+                  <img
                     src={baseURL + img.image_url}
                     alt={service.name}
-                    fill
+                  
                     className="object-cover"
                     priority={idx === 0}
                   />

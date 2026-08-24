@@ -65,7 +65,7 @@ const DeliveryPartnerPage = () => {
       title: "Choose Your Hours",
       description: "Work when you want with complete schedule flexibility"
     },
-    {
+    {  
       icon: <MapPin className="w-8 h-8 text-purple-600" />,
       title: "Local Deliveries",
       description: "Deliver in your neighborhood and familiar areas"

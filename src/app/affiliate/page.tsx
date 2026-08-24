@@ -29,8 +29,23 @@ const AffiliatePage = () => {
     mobile: '',
     professionalType: ''
   });
-  const { user } = useAuth();
-  const router = useRouter()
+  const { user, setRedirectPath } = useAuth();
+  const router = useRouter();
+
+  // Centralized click handler for the affiliate CTAs
+  const handleActionClick = () => {
+    if (!user) {
+      // If user is not logged in, set redirect path to /affiliate and send to /auth
+      setRedirectPath("/affiliate");
+      router.push("/auth");
+    } else if (user.is_affiliate) {
+      // If user is logged in and already accepted terms, send directly to profile
+      router.push("/profile");
+    } else {
+      // If user is logged in but hasn't accepted terms, open modal to accept them
+      setIsPopupOpen(true);
+    }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -41,7 +56,6 @@ const AffiliatePage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically send the form data to your backend
     console.log('Affiliate Application:', formData);
     alert('Application submitted successfully! We will contact you soon.');
     setIsPopupOpen(false);
@@ -127,7 +141,7 @@ const AffiliatePage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white pb-20 md:pb-0">
-   
+    
       
       {/* Hero Section */}
       <section className="bg-black text-white py-20 px-5">
@@ -142,17 +156,7 @@ const AffiliatePage = () => {
           <Button 
             size="lg" 
             className="bg-white text-black hover:bg-gray-100 px-8 py-3 text-lg font-semibold"
-            onClick={()=>{
-            if(user.affiliate_code)
-            {
-                  router.push("/profile");
-                  return;
-
-
-            }
-            setIsPopupOpen(true)
-
-          }}
+            onClick={handleActionClick}
           >
             Join Now - It's Free!
           </Button>
@@ -281,17 +285,10 @@ const AffiliatePage = () => {
             It's free to join and you can start earning immediately!
           </p>
           <Button 
-          onClick={()=>{
-            if(user.affiliate_code)
-            {
-                  router.push("/profile");
-                  return;
-
-            }
-            setIsPopupOpen(true)
-
-          }}
-          size="lg" className="bg-white text-black hover:bg-gray-100 px-8 py-3 text-lg font-semibold">
+            onClick={handleActionClick}
+            size="lg" 
+            className="bg-white text-black hover:bg-gray-100 px-8 py-3 text-lg font-semibold"
+          >
             Start Your Affiliate Journey
           </Button>
         </div>
@@ -301,7 +298,7 @@ const AffiliatePage = () => {
       <div className="border-t border-gray-300"></div>
 
       {/* Join Now Popup Modal */}
-    {isPopupOpen && <AffiliatePopup onClose={() => setIsPopupOpen(false)} />}
+      {isPopupOpen && <AffiliatePopup onClose={() => setIsPopupOpen(false)} />}
       <Footer />
     </div>
   );

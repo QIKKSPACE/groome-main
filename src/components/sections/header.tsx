@@ -12,17 +12,24 @@ import {
   Building2,
   User,
   Briefcase,
+  Store,
+  Factory,
+  Truck,
+  Megaphone,
 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { useServiceCart } from "@/contexts/ServiceCartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { WebflowContext } from "@/contexts/WebflowContext";
 import { useCaptureReferral } from "@/hooks/useCaptureReferral";
 
 const Header = () => {
-  useCaptureReferral()
+  useCaptureReferral();
   const { getTotalItems } = useCart();
+  const { items: serviceItems } = useServiceCart();
+  const totalCartItems = getTotalItems() + serviceItems.length;
   const { user } = useAuth();
-  const { data } = useContext(WebflowContext);
+  const { data } = useContext(WebflowContext); 
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hoveredNavItem, setHoveredNavItem] = useState<string | null>(null);
@@ -35,13 +42,14 @@ const Header = () => {
   const cityDropdownRef = useRef<HTMLDivElement>(null);
 
   const professionalOptions = [
-    { title: "Become an Affiliate", href: "/affiliate" },
-    { title: "Become a Vendor", href: "/vendor" },
-    { title: "Become a Manufacturer", href: "/manufacturer" },
-    { title: "Own a Digital Mall", href: "/digital-mall" },
-    { title: "Become a Delivery Partner", href: "/delivery-partner" },
-    { title: "Apply for Franchise", href: "/franchise" },
-      { title: "Join as an Influencer", href: "/influencer" },
+    { title: "Become an Affiliate", href: "/affiliate", icon: User },
+    { title: "Become a Vendor", href: "/vendor", icon: Store },
+    { title: "Become a Manufacturer", href: "/manufacturer", icon: Factory },
+    { title: "Own a Digital Mall", href: "/digital-mall", icon: Building2 },
+    { title: "Become a Delivery Partner", href: "/delivery-partner", icon: Truck },
+    { title: "Apply for Franchise", href: "/franchise", icon: Briefcase },
+    { title: "Join as an Influencer", href: "/influencer", icon: Megaphone },
+    { title: "Advertise With Us.", href: "/advertisment", icon: Megaphone },
   ];
 
   const sortedCities =
@@ -148,7 +156,7 @@ const Header = () => {
                     setTimeout(() => setHoveredNavItem(null), 200)
                   }
                 >
-                  <button className="flex items-center space-x-1 bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-md text-sm">
+                  <button className="flex items-center space-x-1 bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">
                     <span>Register as a Professional</span>
                     <ChevronDown
                       size={14}
@@ -160,17 +168,21 @@ const Header = () => {
                   {hoveredNavItem === "Register" && (
                     <div
                       ref={dropdownRef}
-                      className="absolute top-full right-0 mt-2 bg-white text-gray-800 rounded-lg shadow-lg z-50 min-w-56 overflow-hidden"
+                      className="absolute top-full right-0 mt-2 bg-white text-gray-800 rounded-lg shadow-xl z-50 min-w-64 overflow-hidden py-2 border border-gray-100"
                     >
-                      {professionalOptions.map((item) => (
-                        <Link
-                          key={item.title}
-                          href={item.href}
-                          className="block px-6 py-3 hover:bg-blue-50 text-sm hover:text-blue-600"
-                        >
-                          {item.title}
-                        </Link>
-                      ))}
+                      {professionalOptions.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <Link
+                            key={item.title}
+                            href={item.href}
+                            className="flex items-center space-x-3 px-5 py-3 hover:bg-gray-50 text-sm font-medium text-gray-700 hover:text-black transition-colors"
+                          >
+                            <Icon size={18} className="text-gray-500" />
+                            <span>{item.title}</span>
+                          </Link>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -224,7 +236,7 @@ const Header = () => {
                 >
                   <ShoppingCart size={20} />
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
-                    {getTotalItems()}
+                    {totalCartItems}
                   </span>
                 </Link>
 
@@ -285,68 +297,71 @@ const Header = () => {
         </div>
 
         {/* Menu Drawer for non-XL */}
-    {isMenuOpen && screenWidth < 1200 && (
-  <div className="absolute top-16 left-0 w-full bg-black text-white shadow-lg z-50">
-    <nav className="px-6 py-4 space-y-4">
-      {/* Professional Options */}
-      {professionalOptions.map((opt) => (
-        <Link
-          key={opt.title}
-          href={opt.href}
-          onClick={() => setIsMenuOpen(false)}
-          className="block text-sm hover:text-blue-400"
-        >
-          {opt.title}
-        </Link>
-      ))}
+        {isMenuOpen && screenWidth < 1200 && (
+          <div className="absolute top-16 left-0 w-full bg-white text-gray-800 shadow-xl z-50 border-t border-gray-100">
+            <nav className="px-6 py-4 space-y-4">
+              {/* Professional Options */}
+              {professionalOptions.map((opt) => {
+                const Icon = opt.icon;
+                return (
+                  <Link
+                    key={opt.title}
+                    href={opt.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center space-x-3 text-sm font-medium text-gray-700 hover:text-black py-1 transition-colors"
+                  >
+                    <Icon size={18} className="text-gray-500" />
+                    <span>{opt.title}</span>
+                  </Link>
+                );
+              })}
 
-      <hr className="border-gray-700 my-2" />
+              <hr className="border-gray-200 my-2" />
 
-      {/* Show below only if screen width > 600 */}
-      {screenWidth > 600 && (
-        <>
-          <Link
-            href="/"
-            onClick={() => setIsMenuOpen(false)}
-            className="block text-sm hover:text-blue-400"
-          >
-            Home
-          </Link>
-          <Link
-            href="/services"
-            onClick={() => setIsMenuOpen(false)}
-            className="block text-sm hover:text-blue-400"
-          >
-            Services
-          </Link>
-          <Link
-            href="/mall"
-            onClick={() => setIsMenuOpen(false)}
-            className="block text-sm hover:text-blue-400"
-          >
-            Mall
-          </Link>
+              {/* Show below only if screen width > 600 */}
+              {screenWidth > 600 && (
+                <>
+                  <Link
+                    href="/"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block text-sm font-medium text-gray-700 hover:text-black"
+                  >
+                    Home
+                  </Link>
+                  <Link
+                    href="/services"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block text-sm font-medium text-gray-700 hover:text-black"
+                  >
+                    Services
+                  </Link>
+                  <Link
+                    href="/mall"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block text-sm font-medium text-gray-700 hover:text-black"
+                  >
+                    Mall
+                  </Link>
 
-          {/* Auth button */}
-         <Link
-  href={dynamicAuthLink.href}
-  onClick={() => setIsMenuOpen(false)}
-  className="text-sm bg-blue-600 hover:bg-blue-700 px-4 py-2 
-  rounded-lg transition-colors block text-center max-w-[200px] mx-auto"
->
-  {dynamicAuthLink.title}
-</Link>
-
-        </>
-      )}
-    </nav>
-  </div>
-)}
+                  {/* Auth button */}
+                  <Link
+                    href={dynamicAuthLink.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 
+                    rounded-lg transition-colors block text-center max-w-[200px] mx-auto font-medium"
+                  >
+                    {dynamicAuthLink.title}
+                  </Link>
+                </>
+              )}
+            </nav>
+          </div>
+        )}
 
       </header>
 
       {/* Bottom Tabs for non-XL */}
-    
+      
     </>
   );
 };

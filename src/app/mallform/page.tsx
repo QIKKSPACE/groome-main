@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Loader2, FileUp, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiClient } from "@/api/apiClient";
 import { useToast } from "@/components/ui/toast";
+import { WebflowContext } from "@/contexts/WebflowContext";
 
 interface FormData {
   shopName: string;
@@ -17,6 +18,7 @@ interface FormData {
   shopActNumber?: string;
   shopActFile?: File | null;
   place_id: string;
+  categories: string[]; // Assuming categories are identified by numeric IDs
 }
 
 interface PlaceSuggestion {
@@ -31,7 +33,8 @@ export default function MallForm() {
     city: "",
     state: "",
     fullAddress: "",
-    place_id: ""
+    place_id: "",
+    categories: [],
   });
 
   const { showToast } = useToast();
@@ -46,7 +49,14 @@ export default function MallForm() {
   const [googleError, setGoogleError] = useState("");
 
   const { login, redirectPath, setRedirectPath, error: authError } = useAuth();
+    const { data, loading: servicesLoading, error: servicesError } = useContext(WebflowContext);
+  
+  const services = data?.services || [];
+const categories = data?.categories || [];
 
+const parentCategories = categories.filter(
+  (category: any) => category.parent_id === null
+);
   useEffect(() => {
     setRedirectPath(null);
   }, []);
@@ -65,7 +75,7 @@ export default function MallForm() {
     setLoading(true);
     setZipError("");
     try {
-      const res = await fetch(`https://thegroome.com/backend/superadmin/zip-lookup?zip=${zip}`, {
+      const res = await fetch(`https://api.thegroome.com/superadmin/zip-lookup?zip=${zip}`, {
         signal: AbortSignal.timeout(8000),
       });
       const data = await res.json();
@@ -99,7 +109,7 @@ export default function MallForm() {
     setGoogleLoading(true);
     setGoogleError("");
     try {
-      const res = await fetch(`https://thegroome.com/backend/places/autocomplete?query=${encodeURIComponent(query)}`);
+      const res = await fetch(`https://api.thegroome.com/places/autocomplete?query=${encodeURIComponent(query)}`);
       if (!res.ok) throw new Error("Failed to fetch autocomplete");
       const data = await res.json();
       setAutocompleteResults(data);
@@ -117,7 +127,7 @@ export default function MallForm() {
     setGoogleSearch(place.description);
 
     try {
-      const res = await fetch(`https://thegroome.com/backend/places/details?place_id=${place.place_id}`);
+      const res = await fetch(`https://api.thegroome.com/places/details?place_id=${place.place_id}`);
       if (!res.ok) throw new Error("Failed to fetch place details");
       const data = await res.json();
 
@@ -137,6 +147,7 @@ export default function MallForm() {
     }
   };
 
+
  const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setLoading(true);
@@ -144,11 +155,12 @@ export default function MallForm() {
   try {
     const formData = new FormData();
     formData.append("shop_name", form.shopName);
-    formData.append("address", form.fullAddress);
+    formData.append("address", form.fullAddress); 
     formData.append("zip_code", form.pincode);
     formData.append("city", form.city);
     formData.append("state", form.state);
     formData.append("userId", "YOUR_USER_ID_HERE");
+      formData.append("category_ids", JSON.stringify(form.categories)); // ✅ include selected category IDs
 
     if (form.shopActNumber) formData.append("company_id", form.shopActNumber);
     if (form.shopActFile) formData.append("company_doc", form.shopActFile);
@@ -167,7 +179,17 @@ export default function MallForm() {
     setLoading(false);
   }
 };
-
+  const handleCategorySelect = (categoryId: number) => {
+    setForm((prev) => {
+      const alreadySelected = prev.categories.includes(categoryId);
+      return {
+        ...prev,
+        categories: alreadySelected
+          ? prev.categories.filter((id) => id !== categoryId)
+          : [...prev.categories, categoryId ],
+      };
+    });
+  };
 
   return (
     <div className="max-w-xl mx-auto p-6 mt-10 bg-white rounded-2xl shadow-lg mb-20 md:mb-0">
@@ -320,7 +342,31 @@ export default function MallForm() {
             className="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
           />
         </div>
-
+ <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Select Products Category
+          </label>
+          {servicesLoading ? (
+            <p className="text-gray-500 text-sm">Loading services...</p>
+          ) : servicesError ? (
+            <p className="text-red-500 text-sm">Failed to load services.</p>
+          ) : services.length > 0 ? (
+            <div className="grid grid-cols-2 gap-2 border p-3 rounded-lg max-h-40 overflow-y-auto">
+             {parentCategories.map((category: any) => (
+  <label key={category.id} className="flex items-center gap-2 text-sm">
+    <input
+      type="checkbox"
+      checked={form.categories?.includes(category.id)}
+      onChange={() => handleCategorySelect(category.id)}
+    />
+    {category.name}
+  </label>
+))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-sm">No services available.</p>
+          )}
+        </div>
         {/* Shop Act */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Shop Act Number (optional)</label>

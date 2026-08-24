@@ -188,26 +188,7 @@ const MobileAppSection = () => {
                                     </li>
                                 </ul>
                             </div>
-                            <form className="mb-6" onSubmit={(e) => e.preventDefault()}>
-                                <div className="flex h-12 md:h-14 border border-[#e5e5e5] rounded-md bg-white shadow-sm overflow-hidden">
-                                    <div className="flex items-center px-3 md:px-4 border-r border-[#e5e5e5] shrink-0">
-                                        <span className="text-[#212529] font-medium text-sm md:text-base">+91</span>
-                                    </div>
-                                    <input
-                                        type="tel"
-                                        value={phoneNumber}
-                                        onChange={(e) => setPhoneNumber(e.target.value)}
-                                        className="flex-grow px-3 md:px-4 text-[#212529] focus:outline-none focus:ring-0 bg-transparent text-sm md:text-base"
-                                        placeholder="Enter mobile number"
-                                    />
-                                    <button
-                                        type="submit"
-                                        className="bg-[#212529] text-white px-6 md:px-10 font-bold hover:bg-opacity-90 transition-colors text-sm md:text-base py-2"
-                                    >
-                                        Send
-                                    </button>
-                                </div>
-                            </form>
+                       
                             
                             {/* Statistics */}
                             <div className="mb-8">

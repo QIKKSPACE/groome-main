@@ -14,12 +14,15 @@ import {
   ShoppingCart
 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { useServiceCart } from "@/contexts/ServiceCartContext";
 
 const BottomNavigation = () => {
   const [activeTab, setActiveTab] = useState("home");
   const router = useRouter();
   const pathname = usePathname();
   const { getTotalItems } = useCart();
+  const { items: serviceItems } = useServiceCart();
+  const totalCartItems = getTotalItems() + serviceItems.length;
 
   // Update active tab based on current pathname
   useEffect(() => {
@@ -113,9 +116,9 @@ const BottomNavigation = () => {
                   className={`${isActive ? 'text-black' : 'text-gray-400'}`}
                 />
                 {/* Cart Badge */}
-                {item.id === "cart" && cartItemCount > 0 && (
+                {item.id === "cart" && totalCartItems > 0 && (
                   <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium min-w-[20px]">
-                    {cartItemCount > 99 ? "99+" : cartItemCount}
+                    {totalCartItems > 99 ? "99+" : totalCartItems}
                   </span>
                 )}
               </div>

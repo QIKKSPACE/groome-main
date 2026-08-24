@@ -11,7 +11,7 @@ export const useCaptureReferral = () => {
 
     // Get referral_id (or referral_code) from URL query
     const params = new URLSearchParams(window.location.search);
-    const referralId = params.get("referral_code") || params.get("referral_id");
+    const referralId = params.get("cr_code") || params.get("referral_id");
 
     if (referralId) {
       localStorage.setItem("referral_id", referralId);

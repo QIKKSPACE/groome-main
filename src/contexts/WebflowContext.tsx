@@ -43,7 +43,7 @@ export const WebflowProvider: React.FC<{ children: ReactNode }> = ({
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("https://thegroome.com/backend/webflow/", { cache: "no-store" });
+      const res = await fetch("https://api.thegroome.com/webflow/", { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to fetch webflow data");
       const json = await res.json();
       setData(json);
@@ -70,7 +70,7 @@ export const WebflowProvider: React.FC<{ children: ReactNode }> = ({
           className="mb-6 animate-pulse drop-shadow-lg"
         />
         <h1 className="text-2xl font-semibold text-gray-800 mb-2">
-          Welcome to Gromme ✨
+          Welcome to Groome ✨
         </h1>
         <p className="text-gray-500 text-sm">Loading your experience...</p>
         <div className="mt-8 animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600"></div>

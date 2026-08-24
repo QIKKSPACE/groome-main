@@ -21,7 +21,7 @@ const AskLocation: React.FC<AskLocationProps> = ({ onClose }) => {
 
     try {
       const res = await fetch(
-        `https://thegroome.com/backend/superadmin/longlat?pincode=${pincode}`
+        `https://api.thegroome.com/superadmin/longlat?pincode=${pincode}`
       );
       if (!res.ok) throw new Error("Invalid pincode or server error.");
 
@@ -31,8 +31,10 @@ const AskLocation: React.FC<AskLocationProps> = ({ onClose }) => {
         updateLocation({
           lat: data.lat,
           lng: data.lng,
+          city:data?.city,
+          state:data?.state,
           pincode,
-          type: "pincode",
+          type: "pincode",  
         });
         onClose?.(); // safe call
       } else {

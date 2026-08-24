@@ -14,8 +14,8 @@ const AffiliateTab = () => {
   const [referralUsers, setReferralUsers] = useState<{ id: string; name: string }[]>([]);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"users" | "earnings">("users");
-
-  const referralUrl = `https://thegroome.com/signup?referral_code=${user?.affiliate_code}`;
+   
+  const referralUrl = `https://thegroome.com/signup?cr_code=${user?.affiliate_code}`;
 
   // Fetch referred users
   useEffect(() => {
@@ -23,7 +23,7 @@ const AffiliateTab = () => {
       if (!user?.affiliate_code) return;
       try {
         const res = await axios.get(
-          `https://thegroome.com/backend/users/all-user-under-affiliate/${user.id}`
+          `https://api.thegroome.com/users/all-user-under-affiliate/${user.id}`
         );
         setReferralUsers(res.data.users || []);
       } catch (err) {
@@ -54,7 +54,7 @@ const AffiliateTab = () => {
   };
 
   // CASE 1: User is not an affiliate yet
-  if (!user?.affiliate_code) {
+  if (!user?.is_affiliate) {
     return (
       <div className="bg-yellow-50 text-yellow-800 p-8 rounded-xl shadow-md text-center max-w-md mx-auto mt-12">
         <h2 className="text-2xl font-bold mb-2">Join Our Affiliate Program</h2>

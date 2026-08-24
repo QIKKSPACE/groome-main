@@ -18,8 +18,8 @@
           margin-bottom: 10px;
         }
 
-        .premium-carousel-container .heading h1 {
-          font-size: clamp(28px, 6vw, 48px);
+        .premium-carousel-container .heading h3 {
+          font-size: clamp(20px, 3vw, 28px);
           font-weight: 700;
           background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 50%,rgb(142, 74, 250) 100%);
           -webkit-background-clip: text;
@@ -34,7 +34,7 @@
           font-family: "Poppins", sans-serif;
         }
 
-        .premium-carousel-container .heading h1::after {
+        .premium-carousel-container .heading h3::after {
           content: "";
           position: absolute;
           bottom: 0;
