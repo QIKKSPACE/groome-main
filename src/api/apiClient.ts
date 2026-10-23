@@ -5,6 +5,7 @@ import { getTokens, storeAccessToken, clearTokens } from "./authService";
 export const apiClient = axios.create({
   baseURL: "https://api.thegroome.com/",
 });
+export const api = apiClient;
 
 // ✅ Attach token only if explicitly allowed
 apiClient.interceptors.request.use(

@@ -168,7 +168,7 @@ const ServiceDetailsPage = () => {
                 </span>
 
                 {/* DYNAMIC VENDOR DELAY ACTIVE STATUS BADGE */}
-              {!isDelayActive ? (
+              {isDelayActive ? (
   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 tracking-wide uppercase">
     <Radio size={12} className="animate-pulse text-emerald-500" />  Delay System Active: Active
   </span>
@@ -177,6 +177,16 @@ const ServiceDetailsPage = () => {
     <Ban size={12} className="text-rose-400" />  Delay System Active: Inactive
   </span>
 )}
+{/* DYNAMIC HOME VISIT STATUS BADGE */}
+      {serviceData?.home_visit_available ? (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 tracking-wide uppercase">
+          <Check size={12} className="text-emerald-500" /> Home Visit Available
+        </span>
+      ) : (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-100 tracking-wide uppercase">
+          <Ban size={12} className="text-rose-400" /> Home Visit Not Available
+        </span>
+      )}
               </div>
 
               <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-2">
