@@ -13,6 +13,7 @@ export interface UserLocation {
   lng?: number;
   pincode?: string;
   city?: string;
+  state?: string;
   type?: "gps" | "pincode" | "city";
 }
 

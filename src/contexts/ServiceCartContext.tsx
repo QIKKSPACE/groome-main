@@ -2,14 +2,32 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 
+export interface BundledServiceChild {
+  id: string;
+  name: string;
+  price: number;
+  discount_price?: number;
+  duration_minutes?: number;
+  quality_tier?: string;
+  image: string;
+  quantity?: number;
+}
+
 export interface ServiceCartItem {
   id: string;
   name: string;
   price: number;
+  originalPrice?: number;
   image: string;
   vendor_id: string;
   vendor_name: string;
   vendor_image: string;
+  isPackage?: boolean;
+  packageId?: string;
+  packageType?: string;
+  bundledServices?: BundledServiceChild[];
+  serviceIds?: string[];
+  duration_minutes?: number;
 }
 
 export interface VendorGroup {
@@ -69,14 +87,14 @@ export const ServiceCartProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const addService = (item: ServiceCartItem) => {
     setItems((prev) => {
       // Prevent duplicates
-      if (prev.find((i) => i.id === item.id)) return prev;
+      if (prev.find((i) => String(i.id) === String(item.id))) return prev;
       return [...prev, item];
     });
     setIsCartOpen(true); // Auto-open cart when adding an item
   };
 
   const removeService = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+    setItems((prev) => prev.filter((item) => String(item.id) !== String(id)));
   };
 
   const clearVendorServices = (vendor_id: string) => {

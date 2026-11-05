@@ -127,11 +127,24 @@ export default function CartPage() {
                           width={120}
                           height={120}
                           className="rounded-lg object-cover"
+                          unoptimized
                         />
                       </div>
 
                       {/* Product Details */}
                       <div className="flex-1 min-w-0 text-center sm:text-left">
+                        {item.isPackage && (
+                          <div className="mb-1.5 flex items-center gap-2 flex-wrap justify-center sm:justify-start">
+                            <span className="inline-flex items-center text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                              Combo Package
+                            </span>
+                            {item.vendorName && (
+                              <span className="text-xs text-gray-500 font-light">
+                                by {item.vendorName.trim()}
+                              </span>
+                            )}
+                          </div>
+                        )}
                         <h3 className="text-base md:text-lg font-medium text-gray-900">{item.name}</h3>
                         <div className="mt-2 flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
                           <div className="flex items-center justify-center sm:justify-start space-x-2">
@@ -142,6 +155,22 @@ export default function CartPage() {
                             {item.originalPrice ? Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100) : 0}% OFF
                           </span>
                         </div>
+
+                        {item.isPackage && item.bundledItems && item.bundledItems.length > 0 && (
+                          <div className="mt-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100 text-left">
+                            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                              Package Includes:
+                            </p>
+                            <div className="space-y-1">
+                              {item.bundledItems.map((child, cIdx) => (
+                                <div key={cIdx} className="text-xs text-gray-600 flex items-center gap-1.5">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 inline-block flex-shrink-0" />
+                                  <span>{child.quantity * item.quantity}x {child.name}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Quantity Controls and Total */}
@@ -352,20 +381,52 @@ export default function CartPage() {
                   {/* Services List */}
                   <div className="p-4 space-y-4">
                     {group.services.map((service) => (
-                      <div key={service.id} className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-lg border border-gray-100 shadow-sm relative">
-                        <div className="relative w-full sm:w-24 h-40 sm:h-24 rounded-md overflow-hidden flex-shrink-0 bg-gray-100">
-                          <Image src={service.image} alt={service.name} fill className="object-cover" />
+                      <div key={service.id} className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm relative space-y-3">
+                        <div className="flex flex-col sm:flex-row gap-4">
+                          <div className="relative w-full sm:w-24 h-40 sm:h-24 rounded-md overflow-hidden flex-shrink-0 bg-gray-100">
+                            <Image src={service.image} alt={service.name} fill className="object-cover" unoptimized />
+                          </div>
+                          <div className="flex-1 min-w-0 flex flex-col justify-center">
+                            {service.isPackage && (
+                              <div className="mb-1">
+                                <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                  Service Combo Package
+                                </span>
+                              </div>
+                            )}
+                            <h4 className="text-base sm:text-lg font-medium text-gray-900 mb-1">{service.name}</h4>
+                            <div className="flex items-center gap-2">
+                              <p className="text-lg font-bold text-blue-600">₹{service.price}</p>
+                              {service.originalPrice && service.originalPrice > service.price && (
+                                <p className="text-sm text-gray-400 line-through">₹{service.originalPrice}</p>
+                              )}
+                            </div>
+                          </div>
+                          <button 
+                            onClick={() => removeService(service.id)}
+                            className="absolute sm:relative top-2 right-2 sm:top-auto sm:right-auto text-gray-400 hover:text-red-500 p-2 sm:self-center bg-white/80 rounded-full"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
                         </div>
-                        <div className="flex-1 min-w-0 flex flex-col justify-center">
-                          <h4 className="text-base sm:text-lg font-medium text-gray-900 mb-1">{service.name}</h4>
-                          <p className="text-lg font-bold text-blue-600">₹{service.price}</p>
-                        </div>
-                        <button 
-                          onClick={() => removeService(service.id)}
-                          className="absolute sm:relative top-2 right-2 sm:top-auto sm:right-auto text-gray-400 hover:text-red-500 p-2 sm:self-center bg-white/80 rounded-full"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
+
+                        {service.isPackage && service.bundledServices && service.bundledServices.length > 0 && (
+                          <div className="pt-2 border-t border-gray-100 bg-gray-50/70 p-2.5 rounded-lg text-xs">
+                            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                              Package Services Included:
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {service.bundledServices.map((child, cIdx) => (
+                                <div key={cIdx} className="flex items-center justify-between text-gray-700 bg-white p-2 rounded border border-gray-100">
+                                  <span className="font-medium">• {child.name}</span>
+                                  {child.duration_minutes && (
+                                    <span className="text-gray-400 text-[11px]">{child.duration_minutes} mins</span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -378,7 +439,9 @@ export default function CartPage() {
                     </div>
                     <button
                       onClick={() => {
-                        const serviceIds = JSON.stringify(group.services.map(s => s.id));
+                        const serviceIds = JSON.stringify(
+                          group.services.flatMap(s => (s.isPackage && s.serviceIds ? s.serviceIds : [s.id]))
+                        );
                         router.push(`/select-slot?vendorId=${group.vendor_id}&serviceIds=${serviceIds}`);
                       }}
                       className="w-full sm:w-auto px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-md"

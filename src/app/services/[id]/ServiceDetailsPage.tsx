@@ -6,6 +6,8 @@ import Image from "next/image";
 import ServiceHeader from "@/components/ServiceHeader";
 import { useServiceCart } from "@/contexts/ServiceCartContext";
 import { Shield, Sparkles, ChevronLeft, ChevronRight, Check, Plus, ShoppingBag, Radio, Ban } from "lucide-react";
+import ServicePackagesWidget from "@/components/ServicePackagesWidget";
+const BACKEND_URL = "https://api.thegroome.com";
 
 const ServiceDetailsPage = () => {
   const params = useParams();
@@ -234,7 +236,8 @@ const ServiceDetailsPage = () => {
           </div>
 
         </div>
-
+         {/* DEDICATED FULL-WIDTH SERVICE PACKAGES / FREQUENTLY BOOKED TOGETHER SECTION */}
+        <ServicePackagesWidget serviceId={id} backendUrl={BACKEND_URL} />
         {/* WHY CHOOSE US ASSURANCE BLOCK */}
         {whyChooseUs.length > 0 && (
           <div className="mt-16 bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-8 md:p-12 text-white shadow-xl relative overflow-hidden">

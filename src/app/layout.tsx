@@ -10,6 +10,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { WebflowProvider } from "@/contexts/WebflowContext";
 import Header from "@/components/sections/header";
 import { LocationProvider } from "@/contexts/LocationContext";
+import { MallProvider } from "@/contexts/MallContext";
 import { ServicesProvider } from "@/contexts/ServicesContext";
 import { ServiceCartProvider } from "@/contexts/ServiceCartContext";
 
@@ -45,6 +46,7 @@ export default function RootLayout({
                   <RecaptchaProvider />
                   <Header />
                   <LocationProvider>
+                    <MallProvider>
                     <Script
                       src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts//route-messenger.js"
                       strategy="afterInteractive"
@@ -56,6 +58,7 @@ export default function RootLayout({
                       data-custom-data='{"appName": "YourApp", "version": "1.0.0", "greeting": "hi"}'
                     />
                     {children}
+                    </MallProvider>
                   </LocationProvider>
                   <ServiceCartDrawer />
                 </ServicesProvider>

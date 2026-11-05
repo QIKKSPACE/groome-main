@@ -2,6 +2,15 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+export interface BundledProductItem {
+  id: string;
+  name: string;
+  image: string;
+  price: number;
+  selling_price?: number;
+  quantity: number;
+}
+
 export interface CartItem {
   id: number | string;
   name: string;
@@ -10,11 +19,16 @@ export interface CartItem {
   originalPrice?: number;
   quantity: number;
   inStock: boolean;
+  isPackage?: boolean;
+  packageId?: string;
+  packageType?: string;
+  vendorName?: string;
+  bundledItems?: BundledProductItem[];
 }
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (item: Omit<CartItem, 'quantity'>) => void;
+  addToCart: (item: (Omit<CartItem, 'quantity'> & { quantity?: number }) | CartItem) => void;
   removeFromCart: (id: number | string) => void;
   updateQuantity: (id: number | string, quantity: number) => void;
   clearCart: () => void;
@@ -48,17 +62,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('cart', JSON.stringify(items));
   }, [items]);
 
-  const addToCart = (item: Omit<CartItem, 'quantity'>) => {
+  const addToCart = (item: (Omit<CartItem, 'quantity'> & { quantity?: number }) | CartItem) => {
+    const qtyToAdd = (item as any).quantity && (item as any).quantity > 0 ? (item as any).quantity : 1;
     setItems(prevItems => {
-      const existingItem = prevItems.find(cartItem => cartItem.id === item.id);
+      const existingItem = prevItems.find(cartItem => String(cartItem.id) === String(item.id));
       if (existingItem) {
         return prevItems.map(cartItem =>
-          cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+          String(cartItem.id) === String(item.id)
+            ? { ...cartItem, quantity: cartItem.quantity + qtyToAdd }
             : cartItem
         );
       } else {
-        return [...prevItems, { ...item, quantity: 1 }];
+        return [...prevItems, { ...item, quantity: qtyToAdd }];
       }
     });
   };

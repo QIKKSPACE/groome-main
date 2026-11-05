@@ -2,9 +2,8 @@
 
 import React from "react";
 import { useServiceCart } from "@/contexts/ServiceCartContext";
-import { X, ShoppingBag, Trash2 } from "lucide-react";
+import { X, ShoppingBag, Trash2, Sparkles, Clock } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 const ServiceCartDrawer: React.FC = () => {
@@ -28,7 +27,7 @@ const ServiceCartDrawer: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-xl font-semibold flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5" />
+            <ShoppingBag className="w-5 h-5 text-indigo-600" />
             Service Cart
           </h2>
           <button 
@@ -66,6 +65,7 @@ const ServiceCartDrawer: React.FC = () => {
                           alt={group.vendor_name} 
                           fill 
                           className="object-cover"
+                          unoptimized
                         />
                       </div>
                       <h3 className="font-semibold text-gray-800">{group.vendor_name}</h3>
@@ -82,20 +82,58 @@ const ServiceCartDrawer: React.FC = () => {
                   {/* Services List */}
                   <div className="space-y-3">
                     {group.services.map((service) => (
-                      <div key={service.id} className="flex gap-3 bg-white p-3 rounded-lg border border-gray-100">
-                        <div className="relative w-16 h-16 rounded-md overflow-hidden flex-shrink-0 bg-gray-100">
-                          <Image src={service.image} alt={service.name} fill className="object-cover" />
+                      <div key={service.id} className="bg-white p-3 rounded-lg border border-gray-100 space-y-2">
+                        <div className="flex gap-3">
+                          <div className="relative w-16 h-16 rounded-md overflow-hidden flex-shrink-0 bg-gray-100">
+                            <Image
+                              src={service.image}
+                              alt={service.name}
+                              fill
+                              className="object-cover"
+                              unoptimized
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            {service.isPackage && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200 mb-1">
+                                <Sparkles className="w-2.5 h-2.5" /> Special Combo
+                              </span>
+                            )}
+                            <h4 className="text-sm font-semibold text-gray-900 truncate">{service.name}</h4>
+                            <div className="flex items-center gap-2 mt-1">
+                              <p className="text-sm font-bold text-blue-600">₹{service.price}</p>
+                              {service.originalPrice && service.originalPrice > service.price && (
+                                <p className="text-xs text-gray-400 line-through">₹{service.originalPrice}</p>
+                              )}
+                            </div>
+                          </div>
+                          <button 
+                            onClick={() => removeService(service.id)}
+                            className="text-gray-400 hover:text-red-500 self-start p-1"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-medium text-gray-900 truncate">{service.name}</h4>
-                          <p className="text-sm font-bold text-blue-600 mt-1">₹{service.price}</p>
-                        </div>
-                        <button 
-                          onClick={() => removeService(service.id)}
-                          className="text-gray-400 hover:text-red-500 self-start p-1"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
+
+                        {service.isPackage && service.bundledServices && service.bundledServices.length > 0 && (
+                          <div className="mt-2 pt-2 border-t border-gray-100 bg-gray-50/70 p-2 rounded text-xs">
+                            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                              Package Includes:
+                            </p>
+                            <div className="space-y-1">
+                              {service.bundledServices.map((child, cIdx) => (
+                                <div key={cIdx} className="flex items-center justify-between text-[11px] text-gray-600">
+                                  <span>• {child.name}</span>
+                                  {child.duration_minutes && (
+                                    <span className="text-gray-400 flex items-center gap-0.5">
+                                      <Clock className="w-2.5 h-2.5" /> {child.duration_minutes}m
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -109,7 +147,9 @@ const ServiceCartDrawer: React.FC = () => {
                     <button
                       onClick={() => {
                         setIsCartOpen(false);
-                        const serviceIds = JSON.stringify(group.services.map(s => s.id));
+                        const serviceIds = JSON.stringify(
+                          group.services.flatMap(s => (s.isPackage && s.serviceIds ? s.serviceIds : [s.id]))
+                        );
                         router.push(`/select-slot?vendorId=${group.vendor_id}&serviceIds=${serviceIds}`);
                       }}
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
